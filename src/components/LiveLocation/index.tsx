@@ -111,7 +111,7 @@ const LiveLocation = () => {
     runPostMyCoordinates(post(path, data))
 
     const text = 'track my location in real time ->'
-    const appUrl = `https://my-test-app/track-location?uniqueID=${id}`
+    const appUrl = `https://my-location.vercel.app/track-location?uniqueID=${id}`
     const encodedText = encodeURIComponent(text + ' ' + appUrl)
     const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedText}`
 
