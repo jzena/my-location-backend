@@ -1,0 +1,106 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+@import "~leaflet/dist/leaflet.css";
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* circular progress */
+.spinner {
+  animation: rotate 2s linear infinite;
+  width: 16px;
+  height: 16px;
+}
+.spinner .path {
+  stroke: purple;
+  stroke-linecap: round;
+  animation: dash 1.5s ease-in-out infinite;
+}
+@keyframes rotate {
+  100% {
+    transform: rotate(1turn);
+  }
+}
+@keyframes dash {
+  0% {
+    stroke-dasharray: 1, 50;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 25, 50;
+    stroke-dashoffset: -8;
+  }
+  100% {
+    stroke-dasharray: 25, 50;
+    stroke-dashoffset: -31;
+  }
+}
+
+/* refresh icon */
+.refresh-icon {
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid #fff;
+  border-color: #fff transparent #fff #fff;
+  border-radius: 50%;
+  position: relative;
+}
+.refresh-icon__arrow {
+  width: 4.5px;
+  height: 1.5px;
+  background-color: #fff;
+  position: absolute;
+  top: -1.5px;
+  right: -2px;
+  transform: rotate(45deg);
+}
+.refresh-icon__arrow2 {
+  width: 4.5px;
+  height: 1.5px;
+  background-color: #fff;
+  position: absolute;
+  top: 1px;
+  right: -2px;
+  transform: rotate(-45deg);
+}
+
+/* leaflet */
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+}
+.leaflet-div-icon {
+  background: transparent;
+  border: none;
+}
+
+/* x-icon */
+.x-icon {
+  width: 25px;
+  height: 25px;
+  display: inline-block;
+  background-color: #f2f2f2;
+  border-radius: 5px;
+  padding: 5px;
+  box-sizing: border-box;
+  cursor: pointer
+}
+.x-icon line {
+  stroke: black;
+  stroke-width: 3;
+}
+.x-icon:hover line {
+  stroke: gray;
+}
