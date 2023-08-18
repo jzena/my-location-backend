@@ -18,36 +18,35 @@ const TrackLocation = () => {
   const [error, setError] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
   const router = useRouter()
+  const id = router.query.uniqueID as string
   
   const { run: runGetSharedCoordinates } = useAsync({})
 
   useEffect(() => {
-    if ( router.query.uniqueID ) {
-      const id = router.query.uniqueID
-      const getPath = `/api/location?uniqueID=${id}`
-      const intervalID = setInterval(() => {
-        runGetSharedCoordinates(fetcher(getPath), {
-          onSuccess: (response) => {
-            if (response.data.latitude && response.data.longitude) {
-              setSharedCoordinates([
-                response.data.latitude,
-                response.data.longitude
-              ])
-            } else {
-              setError(true)
-              setErrorMsg(response.data.message)
-              setSharedCoordinates(null)
-              clearInterval(intervalID);
-            }
+    const getPath = `/api/location?uniqueID=${id}`
+    const intervalID = setInterval(() => {
+      runGetSharedCoordinates(fetcher(getPath), {
+        onSuccess: (response) => {
+          if ( response?.data.sharing === true ) {
+            setSharedCoordinates([
+              response.data.latitude,
+              response.data.longitude
+            ])
+          } else {
+            setError(true)
+            setErrorMsg('Location not found')
+            setSharedCoordinates(null)
+            clearInterval(intervalID);
           }
-        })
-      }, 3000)
-  
-      return () => {
-        clearInterval(intervalID);
-      };
-    }
-  }, [router])
+        }
+      })
+    }, 3000)
+
+    return () => {
+      clearInterval(intervalID);
+    };
+    
+  }, [router, userLocation])
 
   return (
     <>
@@ -69,7 +68,7 @@ const TrackLocation = () => {
             </div>
           )}
 
-          {sharedCoordinates !== null && (
+          {sharedCoordinates !== null && sharedCoordinates !== undefined && (
             <DinamicMap userLocation={userLocation} sharedCoordinates={sharedCoordinates} />
           )}
 

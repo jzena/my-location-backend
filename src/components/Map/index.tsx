@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import CircularProgress from '../CircularProgress';
 import { blueIcon, redIcon } from './icons';
@@ -11,19 +11,40 @@ interface MapProps {
 
 const Map = (props: MapProps) => {
   const { userLocation, sharedCoordinates } = props
+  const [locationNotFound, setLocationNotFound] = useState(false)
+
+  useEffect(() => {
+    if (userLocation === null) {
+      setLocationNotFound(false)
+      setTimeout(() => {
+        setLocationNotFound(true)
+      }, 3000);
+    } else {
+      setLocationNotFound(false)
+    }
+  }, [userLocation])
+  
 
   if (userLocation === null) {
-    return (
-      <div className='flex space-x-2 items-center'>
-        <span className='font-[300]'>Getting location...</span>
-        <CircularProgress />
-      </div>
-    )
+    if (locationNotFound) {
+      return (
+        <div className='font-[300]'>
+          Location not available...
+        </div>
+      )
+    } else {
+      return (
+        <div className='flex space-x-2 items-center'>
+          <span className='font-[300]'>Getting location...</span>
+          <CircularProgress />
+        </div>
+      )
+    }
   }
 
   return (
     <>
-      {userLocation !== null ? (
+      {userLocation !== null && (
         <MapContainer center={userLocation} zoom={13} style={{ height: "400px", width: "100%" }}>
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -36,10 +57,6 @@ const Map = (props: MapProps) => {
             <Marker position={sharedCoordinates} icon={redIcon} />
           )}
         </MapContainer>
-      ) : (
-        <div className='flex space-x-2 items-center'>
-          <span className='font-[300]'>Live location not available.</span>
-        </div>
       )}
     </>
   );

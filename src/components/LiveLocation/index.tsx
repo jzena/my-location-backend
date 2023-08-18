@@ -7,80 +7,60 @@ import { v4 as uuidv4 } from 'uuid';
 import useUserLocation from '@/hooks/useUserLocation';
 import ShareLocationModal from './ShareLocationModal';
 import { useAsync } from '@/hooks/useAsync';
-import { useRouter } from 'next/router';
 import { DURATIONS } from '@/consts';
 
 const DinamicMap = dynamic(() => import('../Map'), {
   ssr: false,
 });
-const fetcher = (path: string) => axios.get(path);
-const post = (path: string, data: any) => axios.post(path, data);
-const put = (path: string, data: any) => axios.put(path, data)
 
 const LiveLocation = () => {
   const { userLocation } = useUserLocation();
   const [open, setOpen] = useState(false)
-  const [sharedCoordinates, setSharedCoordinates] = useState<any>(null)
   const [duration, setDuration] = useState(DURATIONS.FIFTEEN_MINUTES)
-  const [endTime, setEndTime] = useState<any>()
+  const [endTime, setEndTime] = useState<any>(null)
   const [uniqueID, setUniqueID] = useState('')
-  const router = useRouter()
+  const [sharing, setSharing] = useState(false)
   const path = `/api/location`
-  
-  const { run: runGetSharedCoordinates } = useAsync({})
-  const { run: runPostMyCoordinates } = useAsync({})
-  const { run: runUpdateMyCoordinates } = useAsync({})
+
+  const { run: runPostMyCoordinates } = useAsync()
+  const { run: runUpdateMyCoordinates } = useAsync()
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (Date.now() >= endTime) {
+        setSharing(false)
+      }
+    }, 1000)
+    
+    return () => {
+      clearInterval(interval)
+    }
+  }, [endTime, Date])
   
   useEffect(() => {
-    if ( router.query.uniqueID ) {
-      const uniqueID = router.query.uniqueID as string
-      const getPath = `/api/location?uniqueID=${uniqueID}`
-      setUniqueID(uniqueID)
-
-      const intervalID = setInterval(() => {
-        runGetSharedCoordinates(fetcher(getPath), {
-          onSuccess: (response) => {
-            if (response.data.endTime) {
-              setEndTime(response?.data?.endTime)
-              setSharedCoordinates(response?.data)
-              if (Date.now() < response.data.endTime) {
-                const data = {
-                  latitude: userLocation?.[0],
-                  longitude: userLocation?.[1],
-                  sharing: true,
-                  endTime: response.data.endTime,
-                  id: uniqueID
-                }
-                runUpdateMyCoordinates(put(path, data))
-              } else if (Date.now() >= response.data.endTime) {
-                const data = {
-                  latitude: userLocation?.[0],
-                  longitude: userLocation?.[1],
-                  sharing: false,
-                  endTime: response.data.endTime,
-                  id: uniqueID
-                }
-                runUpdateMyCoordinates(put(path, data), {
-                  onSuccess: () => {
-                    axios.delete(`/api/location?uniqueID=${router.query.uniqueID}`)
-                    setSharedCoordinates(null)
-                    router.push('/')
-                  }
-                })
-              }
-            } else {
-              router.push('/')
-            }
-          }
+    const interval = setInterval(() => {
+      if ( sharing ) {
+        const updateCoords = axios.put(path, {
+          latitude: userLocation?.[0],
+          longitude: userLocation?.[1],
+          sharing: true,
+          endTime: endTime,
+          id: uniqueID
         })
-      }, 3000)
-  
-      return () => {
-        clearInterval(intervalID);
-      };
+        runUpdateMyCoordinates(updateCoords)
+
+      } else {
+        axios.delete(`/api/location?uniqueID=${uniqueID}`)
+        setUniqueID('')
+        setEndTime(null)
+        setSharing(false)
+      }
+    }, 3000)
+
+    return () => {
+      clearInterval(interval)
     }
-  }, [router, userLocation])
-  
+  }, [userLocation, sharing, uniqueID])  
   
   const handleOnShareModalClick = () => {
     setOpen(true)
@@ -98,44 +78,45 @@ const LiveLocation = () => {
   const handleShareClick = () => {
     const id = uuidv4();
     const endTime = Date.now() + duration
-    setUniqueID(id)
-    setEndTime(endTime)
+    try {
+      const postCoords = axios.post(path, {
+        latitude: userLocation?.[0],
+        longitude: userLocation?.[1],
+        sharing: true,
+        endTime: endTime,
+        id
+      })
+      runPostMyCoordinates(postCoords, {
+        onSuccess: (response) => {
+          const data = response.data.data
+          if ( data.id && data.endTime && data.sharing ) {
+            setUniqueID(data.id)
+            setEndTime(data.endTime)
+            setSharing(data.sharing)
+            setOpen(false)
 
-    const data = {
-      latitude: userLocation?.[0],
-      longitude: userLocation?.[1],
-      sharing: true,
-      endTime: endTime,
-      id
+            // const appUrl = `http://localhost:3000/track-location?uniqueID=${id}`  //appUrl to test locally
+            const text = 'track my location in real time ->'
+            const appUrl = `https://my-location.vercel.app/track-location?uniqueID=${id}`
+            const encodedText = encodeURIComponent(text + ' ' + appUrl)
+            const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedText}`
+            window.open(whatsappUrl)
+
+          } else {
+            setUniqueID('')
+            setEndTime(null)
+            setSharing(false)
+            setOpen(false)
+          }
+        }
+      })
+    } catch (error) {
+      console.log(error);
     }
-    runPostMyCoordinates(post(path, data))
-
-    const text = 'track my location in real time ->'
-    const appUrl = `https://my-location.vercel.app/track-location?uniqueID=${id}`
-    const encodedText = encodeURIComponent(text + ' ' + appUrl)
-    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedText}`
-
-    window.open(whatsappUrl)
-    router.push(`?uniqueID=${id}`)
-    setOpen(false)
   }
 
-  const handleStopSharingClick = () => {
-    setSharedCoordinates(null)
-    const data = {
-      latitude: userLocation?.[0],
-      longitude: userLocation?.[1],
-      sharing: false,
-      endTime: endTime,
-      id: uniqueID
-    }
-    runUpdateMyCoordinates(post(path, data), {
-      onSuccess: () => {
-        axios.delete(`/api/location?uniqueID=${router.query.uniqueID}`)
-        setSharedCoordinates(null)
-        router.push('/')
-      }
-    })
+  const handleStopSharingClick = async() => {
+    setSharing(false)
   }
 
   const date = (time: any) => new Date(time)
@@ -146,23 +127,10 @@ const LiveLocation = () => {
   return (
     <>
       <div className='w-[100%] flex flex-col items-center !z-[100]'>
-        {sharedCoordinates !== null && (
-          <div className='flex w-[100%] space-x-4 justify-center'>
-            <div className='flex space-x-1 items-center'>
-              <div className='border border-1 border-[blue] w-[10px] h-[10px] bg-[blue]/70' />
-              <span className='text-[12px] font-[300]'>Your position</span>
-            </div>
-            
-            <div className='flex space-x-1 items-center'>
-              <div className='border border-1 border-[red] w-[10px] h-[10px] bg-[red]/70' />
-              <span className='text-[12px] font-[300]'>Your friend's position</span>
-            </div>
-          </div>
-        )}
 
         <DinamicMap userLocation={userLocation} sharedCoordinates={null} />
 
-        {userLocation !== null && router.query.uniqueID !== uniqueID && (
+        {userLocation !== null && sharing === false && (
           <div
             className=' rounded bg-[green] hover:bg-[green]/80 pl-3 pr-1 my-[20px] cursor-pointer h-[24px] flex items-center border shadow shadow-[green]'
             onClick={handleOnShareModalClick}
@@ -172,9 +140,9 @@ const LiveLocation = () => {
             </span>
             <Image src='/whatsapp-logo.png' alt='whatsapp-logo' width={30} height={24} />
           </div>
-        )} 
+        )}
         
-        {userLocation !== null && router.query.uniqueID === uniqueID &&(
+        {userLocation !== null && sharing === true &&(
           <div className='flex flex-col'>
             <div
               className=' rounded bg-[red] hover:bg-[red]/80 pl-3 pr-1 my-[20px] cursor-pointer h-[24px] flex items-center border shadow shadow-[red]'

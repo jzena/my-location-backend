@@ -15,7 +15,7 @@ export function Modal(props: WrapperDialongProps) {
 
   return (
     <>
-      <div className="min-w-[500px] max-w-[650px] min-h-[150px] absolute top-[35%] mx-auto z-[300] bg-white rounded-[10px] p-2 shadow shadow-lg">
+      <div className="min-w-[300px] max-w-[350px] min-h-[150px] absolute top-[35%] mx-auto z-[300] bg-white rounded-[10px] p-2 shadow shadow-lg">
         <span className="!pb-[2px]">
           <div className="flex items-center justify-between h-[40px]">
             <span className="font-[600]">{title}</span>
