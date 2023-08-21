@@ -26,8 +26,13 @@ const TrackLocation = () => {
     const getPath = `/api/location?uniqueID=${id}`
     const intervalID = setInterval(() => {
       runGetSharedCoordinates(fetcher(getPath), {
+        refetch: () => runGetSharedCoordinates(fetcher(getPath)),
         onSuccess: (response) => {
-          if ( response?.data.sharing === true ) {
+          const now = Date.now()
+          const data = response.data          
+          if ( now < data.endTime ) {
+            setError(false)
+            setErrorMsg('')
             setSharedCoordinates([
               response.data.latitude,
               response.data.longitude
@@ -40,19 +45,23 @@ const TrackLocation = () => {
           }
         }
       })
-    }, 3000)
+    }, 5000)
 
     return () => {
       clearInterval(intervalID);
     };
-    
-  }, [router, userLocation])
+  }, [router, runGetSharedCoordinates])
 
   return (
     <>
       {!error && (
         <div className='w-[100%] flex flex-col items-center !z-[100]'>
-          {sharedCoordinates === null && <CircularProgress />}
+          {sharedCoordinates === null && (
+            <div className='mx flex space-x-2 mb-[10px] items-center'>
+              <span className='font-[300]'>Getting your friend's position</span>
+              <CircularProgress />
+            </div>
+          )}
 
           {sharedCoordinates !== null && (
             <div className='flex w-[100%] space-x-4 justify-center'>
@@ -68,16 +77,14 @@ const TrackLocation = () => {
             </div>
           )}
 
-          {sharedCoordinates !== null && sharedCoordinates !== undefined && (
+          {/* {sharedCoordinates !== null && ( */}
             <DinamicMap userLocation={userLocation} sharedCoordinates={sharedCoordinates} />
-          )}
+          {/* )} */}
 
         </div>
       )}
       {error && (
         <div className='flex flex-col space-y-4'>
-          {sharedCoordinates === null && !error && <CircularProgress />}
-
           <span className='font-[300] w-[100%] flex justify-center'>{errorMsg}</span>
           <button
             className='rounded bg-[black] border shadow shadow-[black] text-white text-[14px] px-2 w-fit mx-auto'

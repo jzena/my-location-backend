@@ -1,21 +1,21 @@
 import React from 'react';
-import Position from '@/components/Position';
+import LiveLocation from '@/components/LiveLocation';
 import { useRouter } from 'next/router';
 
-const WelcomePage: React.FC = () => {
+const LiveLocationPage: React.FC = () => {
   const router = useRouter()
   const id = router.query.uniqueID
 
   // handlers
   const handlePositionClick = () => {
-    // router.push('/')
+    if (id) {
+      router.push(`/?uniqueID=${id}`)
+    } else {
+      router.push('/')
+    }
   }
   const handleLiveLocationClick = () => {
-    if (id) {
-      router.push(`/live-location?uniqueID=${id}`)
-    } else {
-      router.push('/live-location')
-    }
+    // router.push('/live-location')
   }
 
   return (
@@ -37,12 +37,13 @@ const WelcomePage: React.FC = () => {
           Live Location
         </div>
       </div>
+      
 
       <div className='w-[92%] lg:w-[40%] mx-auto border rounded border-gray-100 flex justify-center mt-[20px] p-2 shadow shadow-lg'>
-        <Position />
+        <LiveLocation />
       </div>
     </div>
   )
 };
 
-export default WelcomePage;
+export default LiveLocationPage;

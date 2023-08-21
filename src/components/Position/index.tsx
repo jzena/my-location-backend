@@ -18,7 +18,6 @@ const Position = () => {
   useEffect(() => {
     if (userAltitude) { setAltitude(userAltitude) }
   }, [userAltitude])
-  
 
   const getAltitude = () => {
     const altitudeInMeters = altitude || 0

@@ -11,7 +11,6 @@ const getLocation = async(req: NextApiRequest, res: NextApiResponse) => {
     res.status(200).json({
       latitude: location.latitude,
       longitude: location.longitude,
-      sharing: location.sharing,
       endTime: location.endTime,
       id: location.id
     })
@@ -22,11 +21,10 @@ const getLocation = async(req: NextApiRequest, res: NextApiResponse) => {
 }
 
 const postCoordinates = async(req: NextApiRequest, res: NextApiResponse) => {
-  const { latitude, longitude, sharing, endTime, id } = req.body
+  const { latitude, longitude, endTime, id } = req.body
   const location = {
     latitude,
     longitude,
-    sharing,
     endTime,
     id,
   }
@@ -40,14 +38,13 @@ const postCoordinates = async(req: NextApiRequest, res: NextApiResponse) => {
 }
 
 const updateCoordinates = async (req: NextApiRequest, res: NextApiResponse) => {
-  const { latitude, longitude, id, endTime, sharing } = req.body;
+  const { latitude, longitude, endTime, id } = req.body;
   const locationIndex = locations.findIndex((x: any) => x.id === id)
 
   if (locationIndex !== -1) {
     locations[locationIndex] = {
       latitude,
       longitude,
-      sharing,
       endTime,
       id,
     };
