@@ -89,43 +89,59 @@ const LiveLocation = () => {
   
   useEffect(() => {
     const interval = setInterval(() => {
-      if ( endTimeStr ) {
-        runGetMyCoordinates(fetcher(`${locationPath}?uniqueID=${uniqueIDStr}`), {
-          onSuccess: (response) => {
-            const data = response.data
-            const now = Date.now()
-            if ( data.endTime && now < data.endTime ) {
-              updateCoordinates(
-                userLocation,
-                endTimeParsed,
-                uniqueIDStr
-              )
-            } else if ( data.endTime && now >= data.endTime ) {
-              updateCoordinates(
-                userLocation,
-                Date.now(),
-                uniqueIDStr
-              )
-              router.push('/live-location')
-            } else if ( !data.endTime && now < endTimeParsed ) {
-              postCoordinates(
-                userLocation,
-                endTimeParsed,
-                uniqueIDStr,
-                true
-              )
-            } else if ( !data.endTime && now >= endTimeParsed ) {
-              updateCoordinates(
-                userLocation,
-                Date.now(),
-                uniqueIDStr
-              )
-              router.push('/live-location')
+      try {
+        if ( endTimeStr ) {
+          runGetMyCoordinates(fetcher(`${locationPath}?uniqueID=${uniqueIDStr}`), {
+            onSuccess: (response) => {
+              const data = response.data
+              const now = Date.now()
+              if ( data.endTime && now < data.endTime ) {
+                updateCoordinates(
+                  userLocation,
+                  endTimeParsed,
+                  uniqueIDStr
+                )
+              } else if ( data.endTime && now >= data.endTime ) {
+                updateCoordinates(
+                  userLocation,
+                  Date.now(),
+                  uniqueIDStr
+                )
+                router.push('/live-location')
+              } else if ( !data.endTime && now < endTimeParsed ) {
+                postCoordinates(
+                  userLocation,
+                  endTimeParsed,
+                  uniqueIDStr,
+                  true
+                )
+              } else if ( !data.endTime && now >= endTimeParsed ) {
+                updateCoordinates(
+                  userLocation,
+                  Date.now(),
+                  uniqueIDStr
+                )
+                router.push('/live-location')
+              }
             }
+          })
+        } else {
+          return;
+        }
+      } catch (error) {
+        console.log('error-post-put-coords:', error);
+        if (Date.now() < endTimeParsed) {
+          const postData = {
+            latitude: userLocation?.[0],
+            longitude: userLocation?.[1],
+            endTime: endTimeParsed,
+            id: uniqueIDStr
           }
-        })
-      } else {
-        return;
+          navigator.serviceWorker.controller?.postMessage(postData);
+          navigator.serviceWorker.ready.then((registration: any) => {
+            registration.sync.register('sync-data-post');
+          });
+        }
       }
     }, 5000)
 

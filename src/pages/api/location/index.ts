@@ -22,13 +22,25 @@ const getLocation = async(req: NextApiRequest, res: NextApiResponse) => {
 
 const postCoordinates = async(req: NextApiRequest, res: NextApiResponse) => {
   const { latitude, longitude, endTime, id } = req.body
-  const location = {
-    latitude,
-    longitude,
-    endTime,
-    id,
+  const locationIndex = locations.findIndex((x: any) => x.id === id)
+
+  if (locationIndex !== -1) {
+    locations[locationIndex] = {
+      latitude,
+      longitude,
+      endTime,
+      id,
+    };
+    res.status(200).json({ success: true, data: locations[locationIndex] });
+  } else {
+    const location = {
+      latitude,
+      longitude,
+      endTime,
+      id,
+    }
+    locations.push(location)
   }
-  locations.push(location)
   const addedLocation = locations.find((x: any) => x.id === id)
 
   res.status(200).json({

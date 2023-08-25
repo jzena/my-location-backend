@@ -25,26 +25,35 @@ const TrackLocation = () => {
   useEffect(() => {
     const getPath = `/api/location?uniqueID=${id}`
     const intervalID = setInterval(() => {
-      runGetSharedCoordinates(fetcher(getPath), {
-        refetch: () => runGetSharedCoordinates(fetcher(getPath)),
-        onSuccess: (response) => {
-          const now = Date.now()
-          const data = response.data          
-          if ( now < data.endTime ) {
-            setError(false)
-            setErrorMsg('')
-            setSharedCoordinates([
-              response.data.latitude,
-              response.data.longitude
-            ])
-          } else {
-            setError(true)
-            setErrorMsg('Location not found')
-            setSharedCoordinates(null)
-            clearInterval(intervalID);
+      try {
+        runGetSharedCoordinates(fetcher(getPath), {
+          refetch: () => runGetSharedCoordinates(fetcher(getPath)),
+          onSuccess: (response) => {
+            const now = Date.now()
+            const data = response.data
+            if ( now < data.endTime ) {
+              setError(false)
+              setErrorMsg('')
+              setSharedCoordinates([
+                response.data.latitude,
+                response.data.longitude
+              ])
+            } else {
+              setError(true)
+              setErrorMsg('Location not found')
+              setSharedCoordinates(null)
+              clearInterval(intervalID);
+            }
           }
+        })
+      } catch (error) {
+        console.log('error:', error);
+        if ('serviceWorker' in navigator && 'SyncManager' in window) {
+          navigator.serviceWorker.ready.then((registration: any) => {
+            registration.sync.register(`syncGet-${id}`);
+          });
         }
-      })
+      }
     }, 5000)
 
     return () => {
