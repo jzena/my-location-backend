@@ -1,12 +1,12 @@
 export function registerServiceWorker() {
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js').then(
+      navigator.serviceWorker.register('/service-worker.js').then(
         registration => {
-          console.log('ServiceWorker registrado con éxito:', registration.scope);
+          console.log('ServiceWorker successfully registered:', registration.scope);
         },
         err => {
-          console.error('Registro del Service Worker fallido:', err);
+          console.error('ServiceWorker registration failed:', err);
         }
       );
     });
@@ -20,7 +20,7 @@ export function unregisterServiceWorker() {
         registration.unregister();
       })
       .catch(error => {
-        console.error('Error al desregistrar el Service Worker:', error);
+        console.error('Failed to unregister ServiceWorker:', error);
       });
   }
 }
