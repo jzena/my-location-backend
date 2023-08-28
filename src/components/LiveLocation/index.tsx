@@ -90,7 +90,7 @@ const LiveLocation = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       try {
-        if ( endTimeStr ) {
+        if ( endTimeStr && userLocation ) {
           runGetMyCoordinates(fetcher(`${locationPath}?uniqueID=${uniqueIDStr}`), {
             onSuccess: (response) => {
               const data = response.data
@@ -132,8 +132,8 @@ const LiveLocation = () => {
         console.log('error-post-put-coords:', error);
         if (Date.now() < endTimeParsed) {
           const postData = {
-            latitude: userLocation?.[0],
-            longitude: userLocation?.[1],
+            // latitude: userLocation?.[0],
+            // longitude: userLocation?.[1],
             endTime: endTimeParsed,
             id: uniqueIDStr
           }

@@ -30,7 +30,16 @@ async function handleSyncGet(uniqueID) {
 }
 
 async function handleSyncPost() {
-  const data = temporaryData
+  const { userLocation } = useUserLocation();
+  const { endTime, id } = temporaryData
+
+  const data = {
+    latitude: userLocation?.[0],
+    longitude: userLocation?.[1],
+    endTime: endTime,
+    id: id
+  }
+  
   const url = '/api/location'
   const method = 'POST'
 
