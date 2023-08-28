@@ -131,13 +131,11 @@ const LiveLocation = () => {
       } catch (error) {
         console.log('error-post-put-coords:', error);
         if (Date.now() < endTimeParsed) {
-          const postData = {
-            // latitude: userLocation?.[0],
-            // longitude: userLocation?.[1],
+          const data = {
             endTime: endTimeParsed,
             id: uniqueIDStr
           }
-          navigator.serviceWorker.controller?.postMessage(postData);
+          navigator.serviceWorker.controller?.postMessage(data);
           navigator.serviceWorker.ready.then((registration: any) => {
             registration.sync.register('sync-data-post');
           });
